@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>items</key>
+    <array>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Settings</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>key</key>
+        <string>kEnabled</string>
+        <key>label</key>
+        <string>Enabled</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.wrp1002.flashlightsettings</string>
+        <key>PostNotification</key>
+        <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>When flashlight is on:</string>
+        <key>footerText</key>
+        <string>footer</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>key</key>
+        <string>kDisableRaiseToWake</string>
+        <key>label</key>
+        <string>Disable Raise to Wake</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.wrp1002.flashlightsettings</string>
+        <key>PostNotification</key>
+        <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>key</key>
+        <string>kDisableTapToWake</string>
+        <key>label</key>
+        <string>Disable Tap to Wake</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.wrp1002.flashlightsettings</string>
+        <key>PostNotification</key>
+        <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Flashlight Shortcut</string>
+        <key>footerText</key>
+        <string>These shortcuts let you toggle the flashlight\n\nFor triple click to work, you have to have an accessibility shortcut set</string>
+      </dict>
+       <dict>
+        <key>cell</key>
+        <string>PSLinkListCell</string>
+        <key>detail</key>
+        <string>PSListItemsController</string>
+        <key>key</key>
+        <string>kFlashlightShortcut</string>
+        <key>label</key>
+        <string>Flashlight Shortcut</string>
+        <key>showAlphaSlider</key>
+        <true/>
+        <key>validTitles</key>
+        <array>
+		  <string>Disabled</string>
+          <string>Volume Up + Down</string>
+          <string>Lock button triple click</string>
+        </array>
+        <key>validValues</key>
+        <array>
+		  <string>disabled</string>
+          <string>volume</string>
+          <string>tripleLock</string>
+        </array>
+		<key>default</key>
+		<string>disabled</string>
+        <key>defaults</key>
+        <string>com.wrp1002.flashlightsettings</string>
+        <key>PostNotification</key>
+        <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>key</key>
+        <string>kVolumeShortcutEnabled</string>
+        <key>label</key>
+        <string>Enabled</string>
+        <key>default</key>
+        <true/>
+        <key>defaults</key>
+        <string>com.wrp1002.flashlightsettings</string>
+        <key>PostNotification</key>
+        <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
+      </dict>
+
+      <dict>
+		<key>cell</key>
+		<string>PSGroupCell</string>
+		<key>footerText</key>
+		<string>Respringing is NOT needed for changes to take effect!</string>
+	</dict>
+	<dict>
+		<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Reset all settings</string>
+			<key>action</key>
+			<string>Reset</string>
+			<key>isDestructive</key>
+			<true/>
+			<key>confirmation</key>
+			<dict>
+				<key>prompt</key>
+				<string>Are you sure you want to reset all settings?</string>
+				<key>title</key>
+				<string>Reset!</string>
+				<key>cancelTitle</key>
+				<string>Cancel</string>
+			</dict>
+	</dict>
+	<dict>
+		<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Respring</string>
+			<key>action</key>
+			<string>Respring</string>
+			<key>isDestructive</key>
+			<true/>
+			<key>confirmation</key>
+			<dict>
+				<key>prompt</key>
+				<string>Are you sure you want to respring your device?</string>
+				<key>title</key>
+				<string>Respring!</string>
+				<key>cancelTitle</key>
+				<string>Cancel</string>
+			</dict>
+	</dict>
+
+      <dict>
+        <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>Developer</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSButtonCell</string>
+        <key>label</key>
+        <string>Email Me</string>
+        <key>action</key>
+        <string>OpenEmail</string>
+        <key>icon</key>
+        <string>email.png</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSButtonCell</string>
+        <key>label</key>
+        <string>Reddit</string>
+        <key>action</key>
+        <string>OpenReddit</string>
+        <key>icon</key>
+        <string>reddit.png</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSButtonCell</string>
+        <key>label</key>
+        <string>Source Code</string>
+        <key>action</key>
+        <string>OpenGithub</string>
+        <key>icon</key>
+        <string>github.png</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSButtonCell</string>
+        <key>label</key>
+        <string>Donate</string>
+        <key>action</key>
+        <string>OpenPaypal</string>
+        <key>icon</key>
+        <string>paypal.png</string>
+      </dict>
+
+    </array>
+    <key>title</key>
+    <string>FlashlightSettings</string>
+  </dict>
+</plist>

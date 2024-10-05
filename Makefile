@@ -25,3 +25,5 @@ $(TWEAK_NAME)_FRAMEWORKS = UIKit AVFoundation
 
 include $(THEOS)/makefiles/common.mk
 include $(THEOS_MAKE_PATH)/tweak.mk
+SUBPROJECTS += flashlightsettingsprefs
+include $(THEOS_MAKE_PATH)/aggregate.mk

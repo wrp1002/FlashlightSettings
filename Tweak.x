@@ -6,6 +6,8 @@
 
 
 #define TWEAK_NAME @"FlashlightSettings"
+#define BUNDLE [NSString stringWithFormat:@"com.wrp1002.%@", [TWEAK_NAME lowercaseString]]
+#define BUNDLE_NOTIFY (CFStringRef)[NSString stringWithFormat:@"%@/ReloadPrefs", BUNDLE]
 
 @interface Debug : NSObject
 	+(void)Log:(NSString *)msg;
@@ -17,6 +19,44 @@
 		NSLog(@"%@: %@", TWEAK_NAME, msg);
 	}
 @end
+
+
+bool enabled;
+bool disableRaiseToWake;
+bool disableTapToWake;
+NSString *flashlightShortcut;
+
+NSUserDefaults *prefs = nil;
+
+
+static void InitPrefs(void) {
+	if (!prefs) {
+		NSDictionary *defaultPrefs = @{
+			@"kEnabled": @YES,
+			@"kDisableRaiseToWake": @YES,
+			@"kDisableTapToWake": @YES,
+			@"kFlashlightShortcut": @"disabled",
+		};
+		prefs = [[NSUserDefaults alloc] initWithSuiteName:BUNDLE];
+		[prefs registerDefaults:defaultPrefs];
+	}
+}
+
+static void UpdatePrefs() {
+    enabled = [prefs boolForKey: @"kEnabled"];
+    disableRaiseToWake = [prefs boolForKey: @"kDisableRaiseToWake"];
+    disableTapToWake = [prefs boolForKey: @"kDisableTapToWake"];
+    flashlightShortcut = [prefs stringForKey: @"kFlashlightShortcut"];
+
+}
+
+static void PrefsChangeCallback(CFNotificationCenterRef center, void *observer, CFNotificationName name, const void *object, CFDictionaryRef userInfo) {
+	UpdatePrefs();
+}
+
+
+
+
 
 
 //	=========================== Classes / Functions ===========================
@@ -94,21 +134,25 @@ void detectBothVolumeButtonsPressed() {
 
 
 -(void)volumeIncreasePressDownWithModifiers:(long long)arg1 {
-	NSLog(@"FlashlightSettings: volumeUp Pressed");
-	NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
-	lastVolumeUpPressTime = currentTime;
+    if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+        NSLog(@"FlashlightSettings: volumeUp Pressed");
+        NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+        lastVolumeUpPressTime = currentTime;
 
-	detectBothVolumeButtonsPressed();
+        detectBothVolumeButtonsPressed();
+    }
 
 	%orig;
 }
 
 -(void)volumeDecreasePressDownWithModifiers:(long long)arg1 {
-	NSLog(@"FlashlightSettings: volumeDown Pressed");
-	NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
-	lastVolumeDownPressTime = currentTime;
+    if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+        NSLog(@"FlashlightSettings: volumeDown Pressed");
+        NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+        lastVolumeDownPressTime = currentTime;
 
-	detectBothVolumeButtonsPressed();
+        detectBothVolumeButtonsPressed();
+    }
 
 	%orig;
 }
@@ -116,13 +160,33 @@ void detectBothVolumeButtonsPressed() {
 
 
 
+%hook SBLockHardwareButton
+    -(void)triplePress:(id)arg1 {
+        if (enabled && [flashlightShortcut isEqualToString: @"tripleLock"]) {
+            toggleFlashlight();
+            return;
+        }
+
+        %orig;
+    }
+%end
+
+
 
 
 %hook SBBacklightController
 	-(BOOL)shouldTurnOnScreenForBacklightSource:(long long)arg1 {
-		if (flashlightOn() && (arg1 == 9 || arg1 == 20)) {
-			return NO;
-		}
+        if (!enabled)
+            return %orig;
+
+        if (!flashlightOn())
+            return %orig;
+
+        if (arg1 == 9 && disableTapToWake)
+            return NO;
+
+        if (arg1 == 20 && disableRaiseToWake)
+            return NO;
 
 		return %orig;
 	}
@@ -132,4 +196,16 @@ void detectBothVolumeButtonsPressed() {
 
 %ctor {
 	[Debug Log:[NSString stringWithFormat:@"============== %@ started ==============", TWEAK_NAME]];
+
+    InitPrefs();
+	UpdatePrefs();
+
+	CFNotificationCenterAddObserver(
+		CFNotificationCenterGetDarwinNotifyCenter(),
+		NULL,
+		&PrefsChangeCallback,
+		BUNDLE_NOTIFY,
+		NULL,
+		0
+	);
 }
