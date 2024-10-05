@@ -1,6 +1,6 @@
 THEOS_DEVICE_IP = 10.0.0.130
 GO_EASY_ON_ME = 1
-THEOS_PACKAGE_SCHEME=rootless
+#THEOS_PACKAGE_SCHEME=rootless
 
 INSTALL_TARGET_PROCESSES = SpringBoard
 
@@ -9,13 +9,13 @@ PACKAGE_VERSION = $(THEOS_PACKAGE_BASE_VERSION)
 
 ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
 	ARCHS = arm64 arm64e
-	TARGET = iphone:clang:16.5:15.0
+	TARGET = iphone:clang:15.5:15.0
 else
 	ARCHS = armv7 armv7s arm64 arm64e
 	TARGET = iphone:clang:14.2:8.0
 endif
 
-SDKVERSION = 16.5
+#SDKVERSION = 16.5
 
 TWEAK_NAME = FlashlightSettings
 
