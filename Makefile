@@ -19,7 +19,7 @@ endif
 
 TWEAK_NAME = FlashlightSettings
 
-$(TWEAK_NAME)_FILES = Tweak.xm
+$(TWEAK_NAME)_FILES = Tweak.x
 $(TWEAK_NAME)_CFLAGS = -fobjc-arc
 $(TWEAK_NAME)_FRAMEWORKS = UIKit AVFoundation
 
