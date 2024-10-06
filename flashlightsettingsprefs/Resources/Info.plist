@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>FlashlightSettingsPrefs</string>
+	<string>FlashlightSettings</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.wrp1002.flashlightsettingsprefs</string>
 	<key>CFBundleInfoDictionaryVersion</key>

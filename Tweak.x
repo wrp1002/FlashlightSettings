@@ -1,8 +1,6 @@
-//#import <SpringBoard/SBVolumeHardwareButton.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
-
-#import <AVFoundation/AVCaptureDevice.h>
+#import "SBUIFlashlightController.h"
 
 
 #define TWEAK_NAME @"FlashlightSettings"
@@ -24,10 +22,16 @@
 bool enabled;
 bool disableRaiseToWake;
 bool disableTapToWake;
+bool setMaxBrightness;
 NSString *flashlightShortcut;
 
 NSUserDefaults *prefs = nil;
 
+NSTimeInterval lastVolumeUpPressTime = 0;
+NSTimeInterval lastVolumeDownPressTime = 0;
+
+
+// Preference functions
 
 static void InitPrefs(void) {
 	if (!prefs) {
@@ -35,6 +39,7 @@ static void InitPrefs(void) {
 			@"kEnabled": @YES,
 			@"kDisableRaiseToWake": @YES,
 			@"kDisableTapToWake": @YES,
+			@"kMaxLevel": @YES,
 			@"kFlashlightShortcut": @"disabled",
 		};
 		prefs = [[NSUserDefaults alloc] initWithSuiteName:BUNDLE];
@@ -43,10 +48,11 @@ static void InitPrefs(void) {
 }
 
 static void UpdatePrefs() {
-    enabled = [prefs boolForKey: @"kEnabled"];
-    disableRaiseToWake = [prefs boolForKey: @"kDisableRaiseToWake"];
-    disableTapToWake = [prefs boolForKey: @"kDisableTapToWake"];
-    flashlightShortcut = [prefs stringForKey: @"kFlashlightShortcut"];
+	enabled = [prefs boolForKey: @"kEnabled"];
+	disableRaiseToWake = [prefs boolForKey: @"kDisableRaiseToWake"];
+	disableTapToWake = [prefs boolForKey: @"kDisableTapToWake"];
+	setMaxBrightness = [prefs boolForKey: @"kMaxLevel"];
+	flashlightShortcut = [prefs stringForKey: @"kFlashlightShortcut"];
 
 }
 
@@ -55,138 +61,97 @@ static void PrefsChangeCallback(CFNotificationCenterRef center, void *observer, 
 }
 
 
+// Other util functions
+
+static void ToggleFlashlight() {
+	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
+
+	if ([flashlightController isAvailable]) {
+		[Debug Log:@"controller available"];
+
+		if ([flashlightController level]) {
+			[flashlightController _turnPowerOff];
+		}
+		else {
+			if (setMaxBrightness)
+				[flashlightController setLevel:4];
+			else
+				[flashlightController setLevel:[flashlightController _loadFlashlightLevel]];
+		}
+	}
+	else
+		[Debug Log:@"controller NOT available"];
+}
+
+static bool FlashlightOn() {
+	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
+
+	if ([flashlightController isAvailable]) {
+		return (bool)([flashlightController level]);
+	}
+	else
+		return NO;
+}
 
 
-
-
-//	=========================== Classes / Functions ===========================
-
+static void DetectBothVolumeButtonsPressed() {
+	if (fabs(lastVolumeUpPressTime - lastVolumeDownPressTime) < 0.1) {
+		ToggleFlashlight();
+	}
+}
 
 
 //	=========================== Hooks ===========================
 
 
-NSTimeInterval lastVolumeUpPressTime = 0;
-NSTimeInterval lastVolumeDownPressTime = 0;
-
-
-
-
-
-
-void toggleFlashlight() {
-    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-
-    if ([device hasTorch] && [device hasFlash]) {
-        NSError *error = nil;
-
-        if ([device lockForConfiguration:&error]) {
-            if ([device isTorchActive]) {
-                // Turn off the flashlight
-                [device setTorchMode:AVCaptureTorchModeOff];
-            } else {
-                // Turn on the flashlight
-                [device setTorchMode:AVCaptureTorchModeOn];
-            }
-            [device unlockForConfiguration];
-        } else {
-            [Debug Log:[NSString stringWithFormat:@"Error locking device for flashlight configuration: %@", error.localizedDescription]];
-        }
-    }
-}
-
-bool flashlightOn() {
-	AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-
-    if ([device hasTorch] && [device hasFlash]) {
-        NSError *error = nil;
-
-        if ([device lockForConfiguration:&error]) {
-            if ([device isTorchActive]) {
-                return YES;
-            } else {
-                return NO;
-            }
-        }
-    }
-	return NO;
-}
-
-
-
-
-
-
-void detectBothVolumeButtonsPressed() {
-    if (fabs(lastVolumeUpPressTime - lastVolumeDownPressTime) < 0.1) {
-        NSLog(@"FlashlightSettings: Both volume buttons pressed!");
-        // Trigger the desired action
-
-		toggleFlashlight();
-    }
-}
-
-
-
 %hook SBVolumeHardwareButtonActions
-	//%property (nonatomic) NSTimeInterval lastVolumeUpPressTime;
-	//%property (nonatomic) NSTimeInterval lastVolumeDownPressTime;
+	-(void)volumeIncreasePressDownWithModifiers:(long long)arg1 {
+		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+			lastVolumeUpPressTime = currentTime;
+			DetectBothVolumeButtonsPressed();
+		}
 
+		%orig;
+	}
 
--(void)volumeIncreasePressDownWithModifiers:(long long)arg1 {
-    if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
-        NSLog(@"FlashlightSettings: volumeUp Pressed");
-        NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
-        lastVolumeUpPressTime = currentTime;
+	-(void)volumeDecreasePressDownWithModifiers:(long long)arg1 {
+		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+			lastVolumeDownPressTime = currentTime;
+			DetectBothVolumeButtonsPressed();
+		}
 
-        detectBothVolumeButtonsPressed();
-    }
-
-	%orig;
-}
-
--(void)volumeDecreasePressDownWithModifiers:(long long)arg1 {
-    if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
-        NSLog(@"FlashlightSettings: volumeDown Pressed");
-        NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
-        lastVolumeDownPressTime = currentTime;
-
-        detectBothVolumeButtonsPressed();
-    }
-
-	%orig;
-}
+		%orig;
+	}
 %end
-
 
 
 %hook SBLockHardwareButton
-    -(void)triplePress:(id)arg1 {
-        if (enabled && [flashlightShortcut isEqualToString: @"tripleLock"]) {
-            toggleFlashlight();
-            return;
-        }
+	-(void)triplePress:(id)arg1 {
+		if (enabled && [flashlightShortcut isEqualToString: @"tripleLock"]) {
+			ToggleFlashlight();
+			return;
+		}
 
-        %orig;
-    }
+		%orig;
+	}
 %end
-
-
 
 
 %hook SBBacklightController
 	-(BOOL)shouldTurnOnScreenForBacklightSource:(long long)arg1 {
-        if (!enabled)
-            return %orig;
+		if (!enabled)
+			return %orig;
 
-        if (!flashlightOn())
-            return %orig;
+		if (!FlashlightOn())
+			return %orig;
 
-        if (arg1 == 9 && disableTapToWake)
-            return NO;
+		if (arg1 == 9 && disableTapToWake)
+			return NO;
 
-        if (arg1 == 20 && disableRaiseToWake)
-            return NO;
+		if (arg1 == 20 && disableRaiseToWake)
+			return NO;
 
 		return %orig;
 	}
@@ -197,7 +162,7 @@ void detectBothVolumeButtonsPressed() {
 %ctor {
 	[Debug Log:[NSString stringWithFormat:@"============== %@ started ==============", TWEAK_NAME]];
 
-    InitPrefs();
+	InitPrefs();
 	UpdatePrefs();
 
 	CFNotificationCenterAddObserver(
