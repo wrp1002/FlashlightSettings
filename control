@@ -1,6 +1,6 @@
 Package: com.wrp1002.flashlightsettings
 Name: FlashlightSettings
-Version: 0.0.1
+Version: 0.0.2
 Architecture: iphoneos-arm
 Description: Useful settings for the flashlight!
 Maintainer: Wes <wes.hamster@gmail.com>

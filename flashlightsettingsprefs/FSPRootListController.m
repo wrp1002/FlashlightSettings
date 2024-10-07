@@ -11,6 +11,12 @@
 	return _specifiers;
 }
 
+- (void)loadView {
+	[super loadView];
+	((UITableView *)[self table]).keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
+	[self reloadSpecifiers];
+}
+
 -(void)OpenGithub {
 	UIApplication *application = [UIApplication sharedApplication];
 	NSURL *URL = [NSURL URLWithString:@"https://github.com/wrp1002/FlashlightSettings"];

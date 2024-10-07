@@ -25,14 +25,17 @@ bool disableTapToWake;
 bool setMaxBrightness;
 bool autoLock;
 NSString *flashlightShortcut;
-
-NSUserDefaults *prefs = nil;
+bool flashlightTimeoutEnabled;
+NSInteger flashlightTimeoutVal;
 
 NSTimeInterval lastVolumeUpPressTime = 0;
 NSTimeInterval lastVolumeDownPressTime = 0;
+NSTimer *flashlightTimer;
 
 
 // Preference functions
+NSUserDefaults *prefs = nil;
+
 
 static void InitPrefs(void) {
 	if (!prefs) {
@@ -43,11 +46,14 @@ static void InitPrefs(void) {
 			@"kDisableTapToWake": @YES,
 			@"kMaxLevel": @YES,
 			@"kFlashlightShortcut": @"disabled",
+			@"kFlashlightTimeoutEnabled": @NO,
+			@"kFlashlightTimeoutVal": @15,
 		};
 		prefs = [[NSUserDefaults alloc] initWithSuiteName:BUNDLE];
 		[prefs registerDefaults:defaultPrefs];
 	}
 }
+
 
 static void UpdatePrefs() {
 	enabled = [prefs boolForKey: @"kEnabled"];
@@ -56,8 +62,10 @@ static void UpdatePrefs() {
 	disableTapToWake = [prefs boolForKey: @"kDisableTapToWake"];
 	setMaxBrightness = [prefs boolForKey: @"kMaxLevel"];
 	flashlightShortcut = [prefs stringForKey: @"kFlashlightShortcut"];
-
+	flashlightTimeoutEnabled = [prefs boolForKey:@"kFlashlightTimeoutEnabled"];
+	flashlightTimeoutVal = [prefs integerForKey:@"kFlashlightTimeoutVal"];
 }
+
 
 static void PrefsChangeCallback(CFNotificationCenterRef center, void *observer, CFNotificationName name, const void *object, CFDictionaryRef userInfo) {
 	UpdatePrefs();
@@ -84,6 +92,31 @@ static void ToggleFlashlight() {
 	}
 	else
 		[Debug Log:@"SBUIFlashlightController not available"];
+}
+
+static void TurnOffFlashlight() {
+	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
+
+	if ([flashlightController isAvailable]) {
+		[flashlightController _turnPowerOff];
+	}
+	else
+		[Debug Log:@"SBUIFlashlightController not available"];
+}
+
+
+static void StartFlashlightTimer() {
+	if (flashlightTimer) {
+		[flashlightTimer invalidate];
+		flashlightTimer = nil;
+	}
+
+	flashlightTimer = [NSTimer scheduledTimerWithTimeInterval:(flashlightTimeoutVal * 60)
+								repeats:NO
+								block:^(NSTimer * _Nonnull timer) {
+									TurnOffFlashlight();
+						}];
+
 }
 
 
@@ -127,9 +160,15 @@ static void DetectBothVolumeButtonsPressed() {
 
 
 %hook SBUIFlashlightController
-	-(void)turnFlashlightOnForReason:(id)arg1 {
-		[Debug Log:[NSString stringWithFormat:@"turnFlashlightOnForReason: %@  %@", arg1, [arg1 class]]];
+	-(void)_updateStateWithAvailable:(BOOL)arg1 level:(unsigned long long)arg2 overheated:(BOOL)arg3 {
+		if (arg2 && flashlightTimeoutEnabled) {
+			StartFlashlightTimer();
+		}
 
+		%orig;
+	}
+
+	-(void)turnFlashlightOnForReason:(id)arg1 {
 		if (autoLock && arg1)
 			lockDevice();
 
