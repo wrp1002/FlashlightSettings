@@ -79,7 +79,7 @@ static void ToggleFlashlight() {
 
 	if ([flashlightController isAvailable]) {
 		if ([flashlightController level]) {
-			[flashlightController _turnPowerOff];
+			[flashlightController turnFlashlightOffForReason:@"Flashlight Shortcut"];
 		}
 		else {
 			if (setMaxBrightness)
@@ -98,7 +98,7 @@ static void TurnOffFlashlight() {
 	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
 
 	if ([flashlightController isAvailable]) {
-		[flashlightController _turnPowerOff];
+		[flashlightController turnFlashlightOffForReason:@"Flashlight Shortcut"];
 	}
 	else
 		[Debug Log:@"SBUIFlashlightController not available"];
@@ -178,6 +178,26 @@ static void DetectBothVolumeButtonsPressed() {
 
 
 %hook SBVolumeHardwareButtonActions
+	-(void)volumeIncreasePressDown {
+		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+			lastVolumeUpPressTime = currentTime;
+			DetectBothVolumeButtonsPressed();
+		}
+
+		%orig;
+	}
+
+	-(void)volumeDecreasePressDown {
+		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+			lastVolumeDownPressTime = currentTime;
+			DetectBothVolumeButtonsPressed();
+		}
+
+		%orig;
+	}
+
 	-(void)volumeIncreasePressDownWithModifiers:(long long)arg1 {
 		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
 			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
