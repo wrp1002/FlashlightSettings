@@ -9,6 +9,8 @@
         <string>PSGroupCell</string>
         <key>label</key>
         <string>Settings</string>
+        <key>footerText</key>
+        <string>Automatically turn off the screen when the flashlight is turned on</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -24,6 +26,21 @@
         <key>PostNotification</key>
         <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
       </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>key</key>
+        <string>kAutoLock</string>
+        <key>label</key>
+        <string>Auto Lock</string>
+        <key>default</key>
+        <false/>
+        <key>defaults</key>
+        <string>com.wrp1002.flashlightsettings</string>
+        <key>PostNotification</key>
+        <string>com.wrp1002.flashlightsettings/ReloadPrefs</string>
+      </dict>
+
       <dict>
         <key>cell</key>
         <string>PSGroupCell</string>

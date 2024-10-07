@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
-#import "SBUIFlashlightController.h"
+#import "Tweak.h"
 
 
 #define TWEAK_NAME @"FlashlightSettings"
@@ -23,6 +23,7 @@ bool enabled;
 bool disableRaiseToWake;
 bool disableTapToWake;
 bool setMaxBrightness;
+bool autoLock;
 NSString *flashlightShortcut;
 
 NSUserDefaults *prefs = nil;
@@ -37,6 +38,7 @@ static void InitPrefs(void) {
 	if (!prefs) {
 		NSDictionary *defaultPrefs = @{
 			@"kEnabled": @YES,
+			@"kAutoLock": @NO,
 			@"kDisableRaiseToWake": @YES,
 			@"kDisableTapToWake": @YES,
 			@"kMaxLevel": @YES,
@@ -49,6 +51,7 @@ static void InitPrefs(void) {
 
 static void UpdatePrefs() {
 	enabled = [prefs boolForKey: @"kEnabled"];
+	autoLock = [prefs boolForKey: @"kAutoLock"];
 	disableRaiseToWake = [prefs boolForKey: @"kDisableRaiseToWake"];
 	disableTapToWake = [prefs boolForKey: @"kDisableTapToWake"];
 	setMaxBrightness = [prefs boolForKey: @"kMaxLevel"];
@@ -67,8 +70,6 @@ static void ToggleFlashlight() {
 	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
 
 	if ([flashlightController isAvailable]) {
-		[Debug Log:@"controller available"];
-
 		if ([flashlightController level]) {
 			[flashlightController _turnPowerOff];
 		}
@@ -77,11 +78,14 @@ static void ToggleFlashlight() {
 				[flashlightController setLevel:4];
 			else
 				[flashlightController setLevel:[flashlightController _loadFlashlightLevel]];
+
+			[flashlightController turnFlashlightOnForReason:@"Flashlight Shortcut"];
 		}
 	}
 	else
-		[Debug Log:@"controller NOT available"];
+		[Debug Log:@"SBUIFlashlightController not available"];
 }
+
 
 static bool FlashlightOn() {
 	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
@@ -94,6 +98,24 @@ static bool FlashlightOn() {
 }
 
 
+static void lockDevice() {
+	id springBoard = (SpringBoard *)[%c(SpringBoard) sharedApplication];
+
+	if (springBoard) {
+		SBUserAgent *userAgent = [springBoard valueForKey:@"_pluginUserAgent"];
+
+		if (userAgent) {
+			[userAgent lockAndDimDevice];
+		}
+		else {
+			[Debug Log:@"No SpringBoard UserAgent"];
+		}
+	}
+	else
+		[Debug Log:@"No SpringBoard"];
+}
+
+
 static void DetectBothVolumeButtonsPressed() {
 	if (fabs(lastVolumeUpPressTime - lastVolumeDownPressTime) < 0.1) {
 		ToggleFlashlight();
@@ -102,6 +124,18 @@ static void DetectBothVolumeButtonsPressed() {
 
 
 //	=========================== Hooks ===========================
+
+
+%hook SBUIFlashlightController
+	-(void)turnFlashlightOnForReason:(id)arg1 {
+		[Debug Log:[NSString stringWithFormat:@"turnFlashlightOnForReason: %@  %@", arg1, [arg1 class]]];
+
+		if (autoLock && arg1)
+			lockDevice();
+
+		%orig;
+	}
+%end
 
 
 %hook SBVolumeHardwareButtonActions

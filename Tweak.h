@@ -23,3 +23,14 @@
 -(void)coolDown;
 -(BOOL)isOverheated;
 @end
+
+
+@interface springBoard
++(void)sharedInstance;
+@end
+
+
+@interface SBUserAgent
+-(void)lockAndDimDevice;
+@end
+
