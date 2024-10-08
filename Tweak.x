@@ -118,7 +118,12 @@ static void TurnOnFlashlight() {
 	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
 
 	if ([flashlightController isAvailable]) {
-		[flashlightController turnFlashlightOnForReason:@"Flashlight Shortcut"];
+		if (setMaxBrightness)
+				[flashlightController setLevel:4];
+			else
+				[flashlightController setLevel:[flashlightController _loadFlashlightLevel]];
+
+			[flashlightController turnFlashlightOnForReason:@"Flashlight Shortcut"];
 	}
 	else
 		[Debug Log:@"SBUIFlashlightController not available"];
