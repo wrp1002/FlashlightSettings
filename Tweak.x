@@ -28,6 +28,16 @@ NSString *flashlightShortcut;
 bool flashlightTimeoutEnabled;
 NSInteger flashlightTimeoutVal;
 
+bool shortcutVolume;
+bool shortcutDoubleLock;
+bool shortcutTripleLock;
+bool shortcutHoldLock;
+bool shortcutDoubleHome;
+bool shortcutTripleHome;
+bool shortcutHoldHome;
+bool shortcutRinger;
+bool shortcutRingerInverted;
+
 NSTimeInterval lastVolumeUpPressTime = 0;
 NSTimeInterval lastVolumeDownPressTime = 0;
 NSTimer *flashlightTimer;
@@ -64,6 +74,16 @@ static void UpdatePrefs() {
 	flashlightShortcut = [prefs stringForKey: @"kFlashlightShortcut"];
 	flashlightTimeoutEnabled = [prefs boolForKey:@"kFlashlightTimeoutEnabled"];
 	flashlightTimeoutVal = [prefs integerForKey:@"kFlashlightTimeoutVal"];
+
+	shortcutVolume = [flashlightShortcut isEqualToString:@"volume"];
+	shortcutDoubleLock = [flashlightShortcut isEqualToString:@"doubleLock"];
+	shortcutTripleLock = [flashlightShortcut isEqualToString:@"tripleLock"];
+	shortcutHoldLock = [flashlightShortcut isEqualToString:@"holdLock"];
+	shortcutDoubleHome = [flashlightShortcut isEqualToString:@"doubleHome"];
+	shortcutTripleHome = [flashlightShortcut isEqualToString:@"tripleHome"];
+	shortcutHoldHome = [flashlightShortcut isEqualToString:@"holdHome"];
+	shortcutRinger = [flashlightShortcut isEqualToString:@"ringer"];
+	shortcutRingerInverted = [flashlightShortcut isEqualToString:@"ringerInverted"];
 }
 
 
@@ -89,6 +109,16 @@ static void ToggleFlashlight() {
 
 			[flashlightController turnFlashlightOnForReason:@"Flashlight Shortcut"];
 		}
+	}
+	else
+		[Debug Log:@"SBUIFlashlightController not available"];
+}
+
+static void TurnOnFlashlight() {
+	SBUIFlashlightController *flashlightController = [NSClassFromString(@"SBUIFlashlightController") sharedInstance];
+
+	if ([flashlightController isAvailable]) {
+		[flashlightController turnFlashlightOnForReason:@"Flashlight Shortcut"];
 	}
 	else
 		[Debug Log:@"SBUIFlashlightController not available"];
@@ -179,7 +209,7 @@ static void DetectBothVolumeButtonsPressed() {
 
 %hook SBVolumeHardwareButtonActions
 	-(void)volumeIncreasePressDown {
-		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+		if (enabled && shortcutVolume) {
 			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
 			lastVolumeUpPressTime = currentTime;
 			DetectBothVolumeButtonsPressed();
@@ -189,7 +219,7 @@ static void DetectBothVolumeButtonsPressed() {
 	}
 
 	-(void)volumeDecreasePressDown {
-		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+		if (enabled && shortcutVolume) {
 			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
 			lastVolumeDownPressTime = currentTime;
 			DetectBothVolumeButtonsPressed();
@@ -199,7 +229,7 @@ static void DetectBothVolumeButtonsPressed() {
 	}
 
 	-(void)volumeIncreasePressDownWithModifiers:(long long)arg1 {
-		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+		if (enabled && shortcutVolume) {
 			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
 			lastVolumeUpPressTime = currentTime;
 			DetectBothVolumeButtonsPressed();
@@ -209,7 +239,7 @@ static void DetectBothVolumeButtonsPressed() {
 	}
 
 	-(void)volumeDecreasePressDownWithModifiers:(long long)arg1 {
-		if (enabled && [flashlightShortcut isEqualToString: @"volume"]) {
+		if (enabled && shortcutVolume) {
 			NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
 			lastVolumeDownPressTime = currentTime;
 			DetectBothVolumeButtonsPressed();
@@ -220,14 +250,88 @@ static void DetectBothVolumeButtonsPressed() {
 %end
 
 
-%hook SBLockHardwareButton
-	-(void)triplePress:(id)arg1 {
-		if (enabled && [flashlightShortcut isEqualToString: @"tripleLock"]) {
+%hook SBLockHardwareButtonActions
+	-(BOOL)_shouldWaitForDoublePress{
+		if (enabled && shortcutDoubleLock)
+			return YES;
+
+		return %orig;
+	}
+
+	-(void)performDoublePressActions {
+		if (enabled && shortcutDoubleLock) {
 			ToggleFlashlight();
 			return;
 		}
 
 		%orig;
+	}
+
+	-(void)performTriplePressActions {
+		if (enabled && shortcutTripleLock) {
+			ToggleFlashlight();
+			return;
+		}
+
+		%orig;
+	}
+
+	-(void)performLongPressActions {
+		if (enabled && shortcutHoldLock) {
+			ToggleFlashlight();
+			return;
+		}
+
+		%orig;
+	}
+%end
+
+
+%hook SBHomeHardwareButtonActions
+	-(void)performLongPressActions {
+		if (enabled && shortcutHoldHome) {
+			ToggleFlashlight();
+			return;
+		}
+		%orig;
+	}
+
+	-(void)performDoublePressDownActions {
+		if (enabled && shortcutDoubleHome) {
+			ToggleFlashlight();
+			return;
+		}
+
+		%orig;
+	}
+
+	-(void)performTriplePressUpActions {
+		if (enabled && shortcutTripleHome) {
+			ToggleFlashlight();
+			return;
+		}
+
+		%orig;
+	}
+%end
+
+%hook SpringBoard
+	- (void)_updateRingerState:(int)arg1 withVisuals:(BOOL)arg2 updatePreferenceRegister:(BOOL)arg3 {
+
+		if (enabled && (shortcutRinger || shortcutRingerInverted)) {
+			bool shouldTurnOn = arg1;
+
+			if (shortcutRingerInverted)
+				shouldTurnOn = !shouldTurnOn;
+
+			if (shouldTurnOn)
+				TurnOnFlashlight();
+			else
+				TurnOffFlashlight();
+		}
+		else {
+			%orig;
+		}
 	}
 %end
 

@@ -102,13 +102,27 @@ For triple click to work, you have to have an accessibility shortcut set, which 
         <array>
           <string>Disabled</string>
           <string>Volume Up + Down</string>
-          <string>Lock button triple click</string>
+          <string>Lock Button Double Click</string>
+          <string>Lock Button Triple Click</string>
+          <string>Lock Button Hold</string>
+          <string>Home Button Double Click</string>
+          <string>Home Button Triple Click</string>
+          <string>Home Button Hold</string>
+          <string>Ringer</string>
+          <string>Ringer Invered</string>
         </array>
         <key>validValues</key>
         <array>
           <string>disabled</string>
           <string>volume</string>
+          <string>doubleLock</string>
           <string>tripleLock</string>
+          <string>holdLock</string>
+          <string>doubleHome</string>
+          <string>tripleHome</string>
+          <string>holdHome</string>
+          <string>ringer</string>
+          <string>ringerInverted</string>
         </array>
         <key>default</key>
         <string>disabled</string>
