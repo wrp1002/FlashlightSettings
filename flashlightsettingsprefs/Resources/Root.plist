@@ -81,7 +81,7 @@
         <key>label</key>
         <string>Flashlight Shortcut</string>
         <key>footerText</key>
-        <string>These shortcuts let you toggle the flashlight
+        <string>These shortcuts let you toggle the flashlight. Some won't work depending on device type and iOS version
 
 For triple click to work, you have to have an accessibility shortcut set, which this tweak will override
 
